@@ -1,4 +1,5 @@
 import socket
+from os.path import split
 from socket import *
 import os
 
@@ -10,16 +11,6 @@ serverSocket.bind(('', serverPort))
 serverSocket.listen(50)
 # print for the server is ready
 print('Web Server is ready ...')
-
-#opening all the files and images
-files = os.listdir('.')
-files = [f for f in files if os.path.isfile(f)]
-
-images = os.listdir('./images')
-images = [f for f in images if os.path.isfile]
-
-videos = os.listdir('./videos')
-
 
 def sendResponse(res, type):
     if (int(res) == 200):
@@ -56,6 +47,14 @@ def Error(ip,port):
 
 
 while True:
+    # opening all the files and images
+    files = os.listdir('.')
+    files = [f for f in files if os.path.isfile(f)]
+
+    images = os.listdir('./images')
+    images = [f for f in images if os.path.isfile]
+
+    videos = os.listdir('./videos')
     #accept the connection
     connectionSocket, addr = serverSocket.accept()
     ip = addr[0]
@@ -193,5 +192,42 @@ while True:
 
     #if the client made any request that dose not exist
     else:
-        Error(ip,port)
+        try:
+            obj = request.split('/')[1]
+            if(obj in files):
+                type = obj.split('.')[-1]
+                if(type == 'html'):
+                    sendResponse(200, 'text/html')
+                    with open(obj, 'r') as file:
+                        file = file.read()
+                    connectionSocket.send(file.encode())
+                elif(type == 'css'):
+                    sendResponse(200, 'text/css')
+                    with open(obj, 'rb') as file:
+                        file = file.read()
+                    connectionSocket.send(file)
+                elif(type == 'jpg'):
+                    sendResponse(200, 'image/jpg')
+                    with open(obj, 'rb') as file:
+                        file = file.read()
+                    connectionSocket.send(file)
+                elif(type == 'png'):
+                    sendResponse(200, 'image/png')
+                    with open(obj, 'rb') as file:
+                        file = file.read()
+                    connectionSocket.send(file)
+                elif(type == 'mp4'):
+                    sendResponse(200, 'video/mp4')
+                    with open(obj, 'rb') as file:
+                        file = file.read()
+                    connectionSocket.send(file)
+                else:
+                    sendResponse(200, 'text/html') #default
+                    with open(obj, 'rb') as file:
+                        file = file.read()
+                    connectionSocket.send(file)
+            else:
+                Error(ip,port)
+        except IndexError:
+            print('Bad Request')
     connectionSocket.close()
